@@ -56,6 +56,15 @@ PHASE_MANIFESTS: tuple[PhaseManifest, ...] = (
             "Phase 03 must not assume FilterEngine output shape."
         ),
     ),
+    PhaseManifest(
+        id="03",
+        slug="llm_recommendation",
+        package="src.phases.phase03",
+        depends_on=("02",),
+        rollback_hint=(
+            "Delete ``src/phases/phase03``. Remove ``src.llm`` and ``src.services.recommendation_service``."
+        ),
+    ),
 )
 
 

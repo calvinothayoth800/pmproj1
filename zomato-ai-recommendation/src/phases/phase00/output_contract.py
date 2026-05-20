@@ -14,6 +14,11 @@ class RecommendationItem(BaseModel):
     rating: float | None = None
     estimated_cost: int | None = Field(default=None, description="INR cost for two, if known")
     explanation: str = ""
+    location: str = Field(default="", description="Sub-locality / neighbourhood")
+    dish_liked: str = Field(default="", description="Popular dishes (pipe-separated)")
+    book_table: bool = Field(default=False, description="Table booking available")
+    online_order: bool = Field(default=False, description="Online ordering available")
+    votes: int = Field(default=0, description="Number of user reviews/votes")
 
 
 class RecommendationResponse(BaseModel):
