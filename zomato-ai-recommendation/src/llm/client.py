@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 import logging
-import hashlib
 import time
 from typing import Any, Optional
 import httpx
@@ -11,19 +10,6 @@ import httpx
 from src.config import LLM_BASE_URL, LLM_MODEL, get_llm_api_key
 
 logger = logging.getLogger(__name__)
-
-_LAST_CALL_INFO: dict[str, Any] = {}
-
-
-def _key_fingerprint(api_key: str) -> str:
-    digest = hashlib.sha256(api_key.encode("utf-8")).hexdigest()[:10]
-    return f"{api_key[:4]}...{api_key[-4:]} ({digest})"
-
-
-def get_last_call_info() -> dict[str, Any]:
-    """Return sanitized metadata for the latest LLM call in this process."""
-    return dict(_LAST_CALL_INFO)
-
 
 def complete(
     messages: list[dict[str, str]],
@@ -49,20 +35,9 @@ def complete(
     """
     llm_api_key = get_llm_api_key()
     if not llm_api_key:
-        _LAST_CALL_INFO.clear()
-        _LAST_CALL_INFO.update({"attempted": False, "error": "missing_api_key"})
         raise ValueError("LLM API key is not configured. Please set GROQ_API_KEY in .env.")
 
     url = f"{LLM_BASE_URL.rstrip('/')}/chat/completions"
-    _LAST_CALL_INFO.clear()
-    _LAST_CALL_INFO.update(
-        {
-            "attempted": True,
-            "url": url,
-            "model": LLM_MODEL,
-            "key_fingerprint": _key_fingerprint(llm_api_key),
-        }
-    )
     headers = {
         "Authorization": f"Bearer {llm_api_key}",
         "Content-Type": "application/json",
@@ -83,14 +58,6 @@ def complete(
             logger.info("Calling LLM API: model=%s URL=%s (attempt %s/%s)", LLM_MODEL, url, attempt + 1, max_retries)
             with httpx.Client(timeout=timeout_seconds) as client:
                 response = client.post(url, json=payload, headers=headers)
-                _LAST_CALL_INFO.update(
-                    {
-                        "status_code": response.status_code,
-                        "request_id": response.headers.get("x-request-id")
-                        or response.headers.get("x-groq-request-id")
-                        or response.headers.get("cf-ray"),
-                    }
-                )
 
                 # Check if it succeeded
                 if response.status_code == 200:

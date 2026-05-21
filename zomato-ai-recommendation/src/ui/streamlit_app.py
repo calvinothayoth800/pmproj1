@@ -1,4 +1,4 @@
-"""Zomato AI Restaurant Recommendation — Streamlit UI (Phase 04)."""
+"""Zomato AI Restaurant Recommendation Streamlit UI."""
 
 from __future__ import annotations
 
@@ -12,23 +12,18 @@ _ROOT = Path(__file__).resolve().parents[2]
 if str(_ROOT) not in sys.path:
     sys.path.insert(0, str(_ROOT))
 
-from src.config import DATA_CACHE_PATH, LLM_API_KEY, LLM_PROVIDER, PROJECT_ROOT, TOP_K_RECOMMENDATIONS
-from src.phases.phase00.preferences import UserPreferences, PreferenceExtras
+from src.config import DATA_CACHE_PATH, PROJECT_ROOT, TOP_K_RECOMMENDATIONS
 from src.phases.phase00.ui_bridge import preferences_from_ui_safe
 from src.phases.phase01.cache import load_processed
 from src.phases.phase02.engine import FilterEngine
-from src.llm.client import get_last_call_info
 from src.services.recommendation_service import RecommendationService
 from src.ui.formatters import item_card_markdown, response_summary_markdown
 
-# ---------------------------------------------------------------------------
-# Cached data loader (loaded once per server session)
-# ---------------------------------------------------------------------------
 
 @st.cache_resource
 def _load_dataframe() -> "pd.DataFrame":
     """Load the processed Parquet cache once and share across sessions."""
-    import pandas as pd  # noqa: avoid top-level heavy import
+    import pandas as pd  # noqa: F401 - used by the return type at runtime in Streamlit
     import subprocess
 
     path = DATA_CACHE_PATH
@@ -37,8 +32,7 @@ def _load_dataframe() -> "pd.DataFrame":
     if not path.exists():
         build_script = PROJECT_ROOT / "scripts" / "build_cache.py"
         if build_script.is_file():
-            st.info("No local cache was found. Building it now may take a few minutes.")
-            with st.spinner("Building restaurant cache..."):
+            with st.spinner("Preparing restaurant data..."):
                 try:
                     subprocess.run(
                         [sys.executable, str(build_script)],
@@ -75,110 +69,137 @@ def _load_dataframe() -> "pd.DataFrame":
 
 @st.cache_data
 def _city_counts(_df: "pd.DataFrame") -> dict[str, int]:
-    """Map city name → restaurant count."""
+    """Map city name to restaurant count."""
     return _df["city"].value_counts().to_dict()
 
 
 @st.cache_data
 def _cuisine_counts_for_city(_df: "pd.DataFrame", city: str) -> dict[str, int]:
-    """Map cuisine token → count, restricted to rows in the given city."""
+    """Map cuisine token to count, restricted to rows in the given city."""
     subset = _df[_df["city"] == city]
     counts: dict[str, int] = {}
     for cell in subset["cuisines"].dropna():
-        for t in str(cell).split("|"):
-            t = t.strip()
-            if t:
-                counts[t] = counts.get(t, 0) + 1
+        for token in str(cell).split("|"):
+            token = token.strip()
+            if token:
+                counts[token] = counts.get(token, 0) + 1
     return counts
 
 
-# ---------------------------------------------------------------------------
-# Page config
-# ---------------------------------------------------------------------------
-
 st.set_page_config(
     page_title="Zomato AI Recommender",
-    page_icon="🍽️",
-    layout="wide",
+    layout="centered",
 )
 
-st.title("🍽️ Zomato AI Restaurant Recommender")
-st.caption("Get personalized restaurant picks powered by AI — filtered from 12K+ Zomato listings.")
-if LLM_API_KEY:
-    st.info(f"LLM provider configured: {LLM_PROVIDER.upper()}. Recommendations will use the Groq API if available.")
-else:
-    st.warning("GROQ_API_KEY is not configured. The app will return structured fallback recommendations instead of AI-ranked results.")
+st.markdown(
+    """
+    <style>
+    .block-container {
+        max-width: 980px;
+        padding-top: 2.2rem;
+        padding-bottom: 3rem;
+    }
+    [data-testid="stSidebar"] {
+        display: none;
+    }
+    .app-title {
+        text-align: center;
+        margin-bottom: 0.35rem;
+    }
+    .app-subtitle {
+        color: #8a94a6;
+        text-align: center;
+        margin-bottom: 1.5rem;
+    }
+    .section-label {
+        color: #8a94a6;
+        font-size: 0.78rem;
+        font-weight: 700;
+        letter-spacing: 0.08em;
+        margin: 0.2rem 0 0.7rem;
+        text-transform: uppercase;
+    }
+    div[data-testid="stForm"] {
+        border: 1px solid rgba(148, 163, 184, 0.22);
+        border-radius: 10px;
+        padding: 1.2rem 1.35rem 1.35rem;
+        background: rgba(15, 23, 42, 0.35);
+    }
+    div[data-testid="stForm"] button {
+        min-height: 2.8rem;
+    }
+    .results-heading {
+        margin-top: 2rem;
+        margin-bottom: 0.35rem;
+    }
+    </style>
+    """,
+    unsafe_allow_html=True,
+)
 
-# ---------------------------------------------------------------------------
-# Load data
-# ---------------------------------------------------------------------------
+st.markdown("<h1 class='app-title'>Zomato AI Restaurant Recommender</h1>", unsafe_allow_html=True)
+st.markdown(
+    "<p class='app-subtitle'>Set your preferences and get a focused restaurant shortlist.</p>",
+    unsafe_allow_html=True,
+)
 
 df = _load_dataframe()
 city_counts = _city_counts(df)
-
-# City options with counts: "Whitefield (807)"
-city_labels = {c: f"{c} ({city_counts.get(c, 0)})" for c in sorted(city_counts)}
+city_labels = {city: f"{city} ({city_counts.get(city, 0)})" for city in sorted(city_counts)}
 city_names = list(city_labels.keys())
 
-# ---------------------------------------------------------------------------
-# Sidebar — preference form
-# ---------------------------------------------------------------------------
+with st.form("recommendation_preferences", clear_on_submit=False):
+    st.markdown("<div class='section-label'>Your preferences</div>", unsafe_allow_html=True)
 
-with st.sidebar:
-    st.header("Preferences")
+    row1_col1, row1_col2, row1_col3 = st.columns([2.2, 1, 1])
+    with row1_col1:
+        city = st.selectbox(
+            "City / Area",
+            options=city_names,
+            format_func=lambda option: city_labels[option],
+        )
+    with row1_col2:
+        budget = st.selectbox("Budget", options=["low", "medium", "high"], index=1)
+    with row1_col3:
+        top_k = st.slider(
+            "Results",
+            min_value=1,
+            max_value=10,
+            value=TOP_K_RECOMMENDATIONS,
+        )
 
-    city = st.selectbox(
-        "City / Area",
-        options=city_names,
-        format_func=lambda c: city_labels[c],
-    )
-
-    budget = st.selectbox("Budget Tier", options=["low", "medium", "high"], index=1)
-
-    # Dynamic cuisine list — only cuisines available in the selected city, with counts
     cuisine_counts = _cuisine_counts_for_city(df, city)
     cuisine_options = sorted(cuisine_counts.keys())
-
     selected_cuisines = st.multiselect(
         "Cuisines",
         options=cuisine_options,
         default=[],
-        help="Leave empty to skip cuisine filtering. Counts show restaurants in this city.",
-        format_func=lambda x: f"{x.title()} ({cuisine_counts.get(x, 0)})",
+        help="Leave empty to include all cuisines available in the selected area.",
+        format_func=lambda option: f"{option.title()} ({cuisine_counts.get(option, 0)})",
     )
 
-    min_rating = st.slider(
-        "Minimum Rating",
-        min_value=0.0,
-        max_value=5.0,
-        value=0.0,
-        step=0.1,
-        help="Set to 0 to include unrated restaurants.",
-    )
+    rating_col, extras_col = st.columns([1, 1.4])
+    with rating_col:
+        min_rating = st.slider(
+            "Minimum rating",
+            min_value=0.0,
+            max_value=5.0,
+            value=0.0,
+            step=0.1,
+            help="Set to 0 to include unrated restaurants.",
+        )
+    with extras_col:
+        st.caption("Extras")
+        extra_col1, extra_col2, extra_col3 = st.columns(3)
+        with extra_col1:
+            family_friendly = st.checkbox("Family", value=False)
+        with extra_col2:
+            quick_service = st.checkbox("Quick service", value=False)
+        with extra_col3:
+            book_table = st.checkbox("Table booking", value=False)
 
-    st.divider()
-    st.subheader("Extras")
+    submitted = st.form_submit_button("Get recommendations", type="primary", use_container_width=True)
 
-    family_friendly = st.checkbox("Family Friendly", value=False)
-    quick_service = st.checkbox("Quick Service", value=False)
-    book_table = st.checkbox("Table Booking Available", value=False)
-
-    st.divider()
-
-    top_k = st.slider(
-        "Number of Results",
-        min_value=1,
-        max_value=10,
-        value=TOP_K_RECOMMENDATIONS,
-    )
-
-    submitted = st.button("🔍 Get Recommendations", type="primary", use_container_width=True)
-
-# ---------------------------------------------------------------------------
-# Main area — live counter + results
-# ---------------------------------------------------------------------------
-
-# Live match counter — shows how many restaurants fit as you adjust filters
 filter_payload = {
     "city": city,
     "budget": budget,
@@ -190,63 +211,39 @@ filter_payload = {
         "book_table": book_table,
     },
 }
-live_prefs, live_errors = preferences_from_ui_safe(filter_payload)
 
+live_prefs, live_errors = preferences_from_ui_safe(filter_payload)
 if live_prefs is not None:
-    _engine = FilterEngine(df)
-    _result = _engine.apply(live_prefs, log_steps=False)
-    match_count = _result.funnel.get("after_extras", 0)
+    filter_result = FilterEngine(df).apply(live_prefs, log_steps=False)
+    match_count = filter_result.funnel.get("after_extras", 0)
 
     if match_count == 0:
-        st.error(f"**0 restaurants match** — relax your filters before clicking")
+        st.error("0 restaurants match these filters. Relax one or two preferences.")
     elif match_count <= 3:
-        st.warning(f"**{match_count} restaurant{'s' if match_count != 1 else ''} match** — limited options")
+        st.warning(f"{match_count} restaurant{'s' if match_count != 1 else ''} match these filters.")
     else:
-        st.success(f"**{match_count} restaurants match** your filters")
+        st.success(f"{match_count} restaurants match these filters.")
 else:
-    st.error("Invalid filter combination")
+    st.error("Invalid filter combination.")
 
 if not submitted:
-    st.info("Adjust your filters, then click **Get Recommendations** when ready.")
     st.stop()
 
-# Build preferences via the safe bridge (surfaces validation errors)
-payload = {
-    "city": city,
-    "budget": budget,
-    "cuisines": selected_cuisines,
-    "min_rating": min_rating,
-    "extras": {
-        "family_friendly": family_friendly,
-        "quick_service": quick_service,
-        "book_table": book_table,
-    },
-}
-
-prefs, errors = preferences_from_ui_safe(payload)
-
+prefs, errors = preferences_from_ui_safe(filter_payload)
 if errors:
     for err in errors:
         st.error(err)
     st.stop()
 
-# Run recommendation
 service = RecommendationService(df)
-
 with st.spinner("Finding the best restaurants for you..."):
     response = service.recommend(prefs, top_k=top_k)
 
+st.markdown("<h2 class='results-heading'>Recommended restaurants</h2>", unsafe_allow_html=True)
 if response.llm_used:
-    st.success("AI-ranked recommendations generated using Groq.")
+    st.caption("Ranked with Groq AI.")
 else:
-    st.warning("Structured fallback recommendations are being shown. Check your GROQ_API_KEY or network if you expected Groq to be used.")
-
-call_info = get_last_call_info()
-if call_info:
-    with st.expander("LLM diagnostics"):
-        st.json(call_info)
-
-# ---- Render results ----
+    st.caption("Ranked with the local scoring engine.")
 
 if not response.items:
     st.warning("No restaurants match your filters.")
@@ -256,9 +253,7 @@ if not response.items:
     st.caption("Try relaxing your budget, lowering the minimum rating, or removing a cuisine filter.")
     st.stop()
 
-# Summary block
 st.markdown(response_summary_markdown(response))
 
-# Result cards
 for item in response.items:
     st.markdown(item_card_markdown(item))
