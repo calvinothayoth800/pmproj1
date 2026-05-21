@@ -14,7 +14,7 @@ from src.phases.phase02.payloads import to_llm_payload
 from src.llm.prompt_builder import SYSTEM_PROMPT, build_user_prompt
 from src.llm.client import complete
 from src.llm.parser import parse_llm_json, drop_unknown_names, enrich_from_dataframe
-from src.config import LLM_API_KEY
+from src.config import get_llm_api_key
 
 logger = logging.getLogger(__name__)
 
@@ -57,7 +57,7 @@ class RecommendationService:
         num_candidates = len(candidates_df)
 
         # Step 2: Check API key and trigger fallback if missing
-        if not LLM_API_KEY:
+        if not get_llm_api_key():
             logger.warning("GROQ_API_KEY not found. Falling back to structured scorer ranking.")
             return self.fallback_recommend(
                 candidates_df,

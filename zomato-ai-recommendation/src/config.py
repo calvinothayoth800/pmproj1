@@ -13,30 +13,40 @@ _ENV_PATH = _PROJECT_ROOT / ".env"
 load_dotenv(_ENV_PATH)
 
 
-def _env(key: str, default: Optional[str] = None) -> Optional[str]:
-    """Read from environment; fall back to Streamlit secrets if available."""
-    val = os.getenv(key, default)
-    if val is not None:
-        return val
-    # Try Streamlit secrets as fallback (for Streamlit Cloud / local .streamlit/secrets.toml)
+def _streamlit_secret(key: str, default: Optional[str] = None) -> Optional[str]:
+    """Read a top-level Streamlit secret when Streamlit is available."""
     try:
         import streamlit as st
-        # Only access secrets if we're in a valid Streamlit context
-        if hasattr(st, 'secrets') and st.secrets is not None:
-            try:
-                return st.secrets.get(key, default)
-            except (KeyError, AttributeError, Exception):
-                pass
-    except ImportError:
-        pass
-    return default
+
+        return st.secrets.get(key, default)
+    except Exception:
+        return default
+
+
+def _env(key: str, default: Optional[str] = None) -> Optional[str]:
+    """Read from environment; fall back to Streamlit secrets if available."""
+    val = os.getenv(key)
+    if val:
+        return val
+
+    # Try Streamlit secrets as fallback (for Streamlit Cloud / local .streamlit/secrets.toml).
+    return _streamlit_secret(key, default)
 
 
 def _env_int(key: str, default: int) -> int:
-    raw = os.getenv(key)
+    raw = _env(key)
     if raw is None:
         return default
     return int(raw)
+
+
+def get_llm_api_key() -> Optional[str]:
+    """Read the active LLM API key at call time."""
+    provider = (_env("LLM_PROVIDER", LLM_PROVIDER) or "groq").lower()
+    groq_key = _env("GROQ_API_KEY")
+    openai_key = _env("OPENAI_API_KEY")
+    key = groq_key if provider == "groq" else openai_key
+    return key or groq_key or openai_key
 
 
 LLM_PROVIDER: str = (_env("LLM_PROVIDER", "groq") or "groq").lower()

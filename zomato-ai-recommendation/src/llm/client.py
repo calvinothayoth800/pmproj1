@@ -7,7 +7,7 @@ import time
 from typing import Any, Optional
 import httpx
 
-from src.config import LLM_API_KEY, LLM_BASE_URL, LLM_MODEL
+from src.config import LLM_BASE_URL, LLM_MODEL, get_llm_api_key
 
 logger = logging.getLogger(__name__)
 
@@ -33,12 +33,13 @@ def complete(
         ValueError: If LLM_API_KEY is not configured.
         RuntimeError: If all retry attempts fail.
     """
-    if not LLM_API_KEY:
+    llm_api_key = get_llm_api_key()
+    if not llm_api_key:
         raise ValueError("LLM API key is not configured. Please set GROQ_API_KEY in .env.")
 
     url = f"{LLM_BASE_URL.rstrip('/')}/chat/completions"
     headers = {
-        "Authorization": f"Bearer {LLM_API_KEY}",
+        "Authorization": f"Bearer {llm_api_key}",
         "Content-Type": "application/json",
     }
 
