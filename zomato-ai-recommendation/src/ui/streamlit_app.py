@@ -28,16 +28,33 @@ from src.ui.formatters import item_card_markdown, response_summary_markdown
 def _load_dataframe() -> "pd.DataFrame":
     """Load the processed Parquet cache once and share across sessions."""
     import pandas as pd  # noqa: avoid top-level heavy import
+    import subprocess
 
     path = DATA_CACHE_PATH
     if not path.is_absolute():
         path = PROJECT_ROOT / path
     if not path.exists():
-        st.error(
-            "Data cache not found. Run `python scripts/build_cache.py` first, "
-            "then restart the app."
-        )
-        st.stop()
+        build_script = PROJECT_ROOT / "scripts" / "build_cache.py"
+        if build_script.is_file():
+            st.info("Data cache not found; building cache now. This may take a few minutes...")
+            try:
+                subprocess.run(
+                    [sys.executable, str(build_script)],
+                    check=True,
+                    cwd=str(PROJECT_ROOT),
+                )
+            except subprocess.CalledProcessError:
+                st.error(
+                    "Automatic cache build failed. Please ensure Python 3.10+ is installed "
+                    "and the deployment environment has network access, then restart the app."
+                )
+                st.stop()
+        if not path.exists():
+            st.error(
+                "Data cache not found after build attempt. Run `python scripts/build_cache.py` "
+                "locally or configure a startup build command for deployment."
+            )
+            st.stop()
     return load_processed(path)
 
 

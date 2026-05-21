@@ -8,6 +8,12 @@ import logging
 import sys
 from pathlib import Path
 
+if sys.version_info < (3, 10):
+    raise RuntimeError(
+        "Python 3.10 or newer is required to run scripts/build_cache.py. "
+        "Use `py -3 scripts/build_cache.py` or install Python 3.10+.`"
+    )
+
 ROOT = Path(__file__).resolve().parents[1]
 if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
