@@ -17,6 +17,7 @@ from src.phases.phase00.preferences import UserPreferences, PreferenceExtras
 from src.phases.phase00.ui_bridge import preferences_from_ui_safe
 from src.phases.phase01.cache import load_processed
 from src.phases.phase02.engine import FilterEngine
+from src.llm.client import get_last_call_info
 from src.services.recommendation_service import RecommendationService
 from src.ui.formatters import item_card_markdown, response_summary_markdown
 
@@ -239,6 +240,11 @@ if response.llm_used:
     st.success("AI-ranked recommendations generated using Groq.")
 else:
     st.warning("Structured fallback recommendations are being shown. Check your GROQ_API_KEY or network if you expected Groq to be used.")
+
+call_info = get_last_call_info()
+if call_info:
+    with st.expander("LLM diagnostics"):
+        st.json(call_info)
 
 # ---- Render results ----
 
