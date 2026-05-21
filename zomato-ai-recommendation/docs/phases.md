@@ -275,7 +275,21 @@ Rank filtered candidates and generate explanations via **Groq** (OpenAI-compatib
 
 ### Objective
 
-End-to-end Streamlit: collect preferences, show results and loading states.
+End-to-end Streamlit: collect preferences, show results and loading states with a polished, responsive UI that integrates all previous phases.
+
+### In scope
+
+- Streamlit sidebar form with dynamic dropdowns
+- Live match counter (updates as filters change)
+- Result cards with AI explanations
+- Loading spinners and empty states
+- Error handling and fallback displays
+
+### Out of scope
+
+- User authentication
+- Persistent user preferences
+- Mobile-responsive design (Streamlit handles basic responsiveness)
 
 ### Deliverables
 
@@ -283,22 +297,76 @@ End-to-end Streamlit: collect preferences, show results and loading states.
 |----------|------|
 | App | `src/ui/streamlit_app.py` |
 | Formatters | `src/ui/formatters.py` |
+| Phase registry | `src/phases/phase04/README.md` |
 
 ### Acceptance criteria
 
 - [ ] City, budget, cuisines, min rating, extras
+- [ ] Dynamic cuisine dropdown filtered by selected city with counts
+- [ ] Live match counter updates in real-time as filters change
 - [ ] Spinner during Groq call
 - [ ] Top 5–10 cards + optional summary
-- [ ] Empty-state guidance
+- [ ] Empty-state guidance with actionable suggestions
+- [ ] Fallback display when LLM is unavailable
 - [ ] `streamlit run src/ui/streamlit_app.py`
+- [ ] All formatters tested with edge cases (None values, empty strings)
 
 ### Tasks
 
-- [ ] `@st.cache_resource` for parquet
-- [ ] Form widgets → `UserPreferences`
-- [ ] Result cards, formatters, disable double-submit
+**Setup**
+
 - [ ] Add `streamlit` to `requirements.txt`
+- [ ] Create `src/ui/` directory structure
+
+**Data loading**
+
+- [ ] `@st.cache_resource` for parquet (load once per session)
+- [ ] `@st.cache_data` for city counts and cuisine counts
+- [ ] Error handling when cache file is missing
+
+**Form components**
+
+- [ ] City dropdown with restaurant counts
+- [ ] Budget tier selector
+- [ ] Dynamic cuisine multiselect (filtered by city)
+- [ ] Minimum rating slider
+- [ ] Extras checkboxes (family-friendly, quick service, book table)
+- [ ] Top-K results slider
+- [ ] Submit button with primary styling
+
+**Live feedback**
+
+- [ ] Real-time match counter using `FilterEngine`
+- [ ] Color-coded feedback (green: many matches, yellow: few, red: none)
+- [ ] Validation error display from `preferences_from_ui_safe()`
+
+**Results display**
+
+- [ ] Summary block with filter count and LLM indicator
+- [ ] Numbered recommendation cards
+- [ ] Rich formatting: name, rating, cost, location, cuisines, dishes, badges
+- [ ] AI explanation in blockquote style
+- [ ] Empty state with suggestions to relax filters
+
+**Formatters**
+
+- [ ] `format_cost()` — handle None, format with ₹ symbol
+- [ ] `format_rating()` — handle None, format with ⭐ symbol
+- [ ] `format_cuisines()` — split pipe-separated, title case
+- [ ] `format_dish_liked()` — split pipe-separated, title case
+- [ ] `format_votes()` — abbreviate large numbers (e.g., "1.2K reviews")
+- [ ] `item_card_markdown()` — build complete card layout
+- [ ] `response_summary_markdown()` — build summary with metadata
+
+**Testing**
+
 - [ ] Manual tests: Delhi, Bangalore, impossible filters
+- [ ] Test with missing data cache
+- [ ] Test with invalid API key
+- [ ] Test with various filter combinations
+- [ ] Verify loading states appear correctly
+- [ ] Test edge cases: no cuisines selected, rating = 0, all extras checked
+
 
 ---
 
@@ -336,5 +404,5 @@ Update this table in [README.md](README.md) as you progress.
 | 01 – Data foundation | Implemented (`src/phases/phase01`, facade `src/data`) |
 | 02 – Filtering engine | Implemented (`src/phases/phase02`, facade `src/filter`) |
 | 03 – LLM recommendation | Implemented (`src/llm/`, `src/services/`, `src/phases/phase03`) |
-| 04 – User interface | Not started |
+| 04 – User interface | Implemented (`src/ui/`, `src/phases/phase04`) |
 | 05 – Hardening & deploy | Not started |

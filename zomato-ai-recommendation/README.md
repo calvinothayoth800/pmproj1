@@ -97,6 +97,6 @@ Output: `data/processed/restaurants.parquet` (+ `.meta.json`). See [docs/DATA_NO
 | 00 – Web UI contract (`src/phases/phase00`) | Implemented |
 | 01 – Data foundation (`src/phases/phase01`, facade `src/data`) | Implemented |
 | 02 – Filtering engine (`src/phases/phase02`, facade `src/filter`) | Implemented |
-| 03 – LLM recommendation | Not started |
-| 04 – User interface | Not started |
+| 03 – LLM recommendation (`src/llm/`, `src/services/`) | Implemented |
+| 04 – User interface (`src/ui/`) | Implemented |
 | 05 – Hardening & deploy | Not started |
