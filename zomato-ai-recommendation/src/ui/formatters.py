@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from html import escape
 from typing import Optional
 
 from src.phases.phase00.output_contract import RecommendationItem, RecommendationResponse
@@ -17,8 +18,8 @@ def format_cost(cost: Optional[int]) -> str:
 def format_rating(rating: Optional[float]) -> str:
     """Format rating."""
     if rating is None:
-        return "Rating N/A"
-    return f"{rating:.1f}/5"
+        return "N/A"
+    return f"{rating:.1f}"
 
 
 def format_cuisines(cuisine_str: str) -> list[str]:
@@ -44,59 +45,88 @@ def format_votes(votes: int) -> str:
     return f"{votes} reviews"
 
 
+def _pill(label: str, variant: str = "") -> str:
+    class_name = f"result-pill {variant}".strip()
+    return f"<span class='{class_name}'>{escape(label)}</span>"
+
+
 def item_card_markdown(item: RecommendationItem) -> str:
-    """Build a markdown string for one recommendation card."""
-    lines: list[str] = []
-
-    lines.append(f"### {item.rank}. {item.name}")
-    lines.append(f"**Rating:** {format_rating(item.rating)} &nbsp; **Cost for two:** {format_cost(item.estimated_cost)}")
-
-    if item.location:
-        lines.append(f"**Location:** {item.location}")
-
+    """Build an HTML string for one recommendation card."""
     cuisines = format_cuisines(item.cuisine)
-    if cuisines:
-        lines.append(f"**Cuisines:** {', '.join(cuisines)}")
-
     dishes = format_dish_liked(item.dish_liked)
-    if dishes:
-        lines.append(f"**Popular dishes:** {', '.join(dishes[:6])}")
 
-    badges: list[str] = []
+    pills: list[str] = []
     if item.online_order:
-        badges.append("Online ordering")
+        pills.append(_pill("Online ordering", "accent"))
     if item.book_table:
-        badges.append("Table booking")
+        pills.append(_pill("Table booking", "accent"))
     if item.votes > 0:
-        badges.append(format_votes(item.votes))
-    if badges:
-        lines.append(f"**Available:** {' | '.join(badges)}")
+        pills.append(_pill(format_votes(item.votes)))
 
+    cuisine_text = ", ".join(cuisines[:5]) if cuisines else "Cuisine not listed"
+    dish_html = ""
+    if dishes:
+        dish_html = (
+            "<div class='result-dishes'>"
+            f"<span>Popular</span>{escape(', '.join(dishes[:6]))}"
+            "</div>"
+        )
+
+    explanation_html = ""
     if item.explanation:
-        lines.append(f"\n> {item.explanation}")
+        explanation_html = f"<p class='result-explanation'>{escape(item.explanation)}</p>"
 
-    lines.append("---")
-    return "\n\n".join(lines)
+    availability_html = ""
+    if pills:
+        availability_html = f"<div class='result-pills'>{''.join(pills)}</div>"
+
+    return f"""
+    <article class="result-card">
+        <div class="result-rank">{item.rank:02d}</div>
+        <div class="result-body">
+            <div class="result-topline">
+                <div>
+                    <h3>{escape(item.name)}</h3>
+                    <p class="result-location">{escape(item.location or "Location not listed")}</p>
+                </div>
+                <div class="result-score">
+                    <strong>{escape(format_rating(item.rating))}</strong>
+                    <span>rating</span>
+                </div>
+            </div>
+            <div class="result-meta">
+                <span>{escape(format_cost(item.estimated_cost))} for two</span>
+                <span>{escape(cuisine_text)}</span>
+            </div>
+            {dish_html}
+            {availability_html}
+            {explanation_html}
+        </div>
+    </article>
+    """
 
 
 def response_summary_markdown(response: RecommendationResponse) -> str:
-    """Build a summary block for the top of the results."""
-    parts: list[str] = []
+    """Build an HTML summary block for the top of the results."""
+    summary = escape(response.summary or "Here are the restaurants that best match your preferences.")
+    ranker = "Groq AI ranking" if response.llm_used else "Local scoring"
+    count = response.filter_count if response.filter_count is not None else 0
 
-    if response.summary:
-        parts.append(f"**Summary:** {response.summary}")
-
-    meta_parts: list[str] = []
-    if response.filter_count is not None:
-        meta_parts.append(f"{response.filter_count} candidates filtered")
-    if response.llm_used:
-        meta_parts.append("AI-ranked")
-    else:
-        meta_parts.append("Scorer-ranked")
-    parts.append(" | ".join(meta_parts))
-
+    notes = ""
     if response.messages:
-        for msg in response.messages:
-            parts.append(f"Note: {msg}")
+        joined = " ".join(response.messages)
+        notes = f"<p class='summary-note'>{escape(joined)}</p>"
 
-    return "\n\n".join(parts)
+    return f"""
+    <section class="summary-card">
+        <div>
+            <span class="summary-kicker">{escape(ranker)}</span>
+            <p>{summary}</p>
+        </div>
+        <div class="summary-count">
+            <strong>{count}</strong>
+            <span>candidates</span>
+        </div>
+        {notes}
+    </section>
+    """
