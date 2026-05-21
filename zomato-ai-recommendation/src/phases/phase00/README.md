@@ -7,7 +7,7 @@
 | Module | Role |
 |--------|------|
 | `preferences.py` | `UserPreferences`, `BudgetTier`, `PreferenceExtras` |
-| `ui_bridge.py` | `preferences_from_ui()`, city aliases, cuisine/note caps |
+| `ui_bridge.py` | `preferences_from_ui()`, city aliases, cuisine caps |
 | `output_contract.py` | `RecommendationItem`, `RecommendationResponse` |
 
 ## Rollback
@@ -35,7 +35,6 @@ payload = {
         "quick_service": quick_cb,
         "book_table": book_cb,
     },
-    "additional_notes": notes_area or None,
 }
 prefs, errors = preferences_from_ui_safe(payload)
 if errors:

@@ -54,21 +54,6 @@ def test_preferences_from_ui_truncates_cuisines() -> None:
     assert len(p.cuisines) == 10
 
 
-def test_preferences_from_ui_truncates_notes() -> None:
-    long_note = "x" * 5000
-    p = preferences_from_ui(
-        {
-            "city": "Delhi",
-            "budget": "medium",
-            "cuisines": [],
-            "min_rating": 0,
-            "additional_notes": long_note,
-        }
-    )
-    assert p.additional_notes is not None
-    assert len(p.additional_notes) == 2000
-
-
 def test_preferences_from_ui_invalid_budget() -> None:
     with pytest.raises(ValueError, match="budget"):
         preferences_from_ui(

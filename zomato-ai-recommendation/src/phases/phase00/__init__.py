@@ -19,7 +19,6 @@ from src.phases.phase00.preferences import (
     UserPreferences,
 )
 from src.phases.phase00.ui_bridge import (
-    MAX_ADDITIONAL_NOTES_CHARS,
     MAX_UI_CUISINES,
     apply_city_aliases,
     preferences_from_ui,
@@ -29,7 +28,6 @@ from src.phases.phase00.ui_bridge import (
 __all__ = [
     "BudgetTier",
     "DEPENDS_ON_PHASE_IDS",
-    "MAX_ADDITIONAL_NOTES_CHARS",
     "MAX_UI_CUISINES",
     "PHASE_ID",
     "PHASE_SLUG",

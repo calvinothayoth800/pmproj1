@@ -21,7 +21,7 @@ class UserPreferences(BaseModel):
     """
     Canonical payload produced by the web UI (Streamlit form → service).
 
-    Phase 02+ filtering uses these fields; the LLM may receive ``additional_notes``.
+    Phase 02+ filtering uses these fields directly.
     """
 
     city: str = Field(..., min_length=1, max_length=120)
@@ -29,7 +29,6 @@ class UserPreferences(BaseModel):
     cuisines: list[str] = Field(default_factory=list)
     min_rating: float = Field(default=0.0, ge=0.0, le=5.0)
     extras: PreferenceExtras = Field(default_factory=PreferenceExtras)
-    additional_notes: str | None = Field(default=None, max_length=4000)
 
     model_config = {"frozen": False}
 

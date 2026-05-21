@@ -27,7 +27,6 @@ def main() -> int:
     parser.add_argument("--family", action="store_true")
     parser.add_argument("--quick", action="store_true")
     parser.add_argument("--book", action="store_true")
-    parser.add_argument("--notes", default=None, help="Additional text preferences / notes")
     parser.add_argument(
         "--cache",
         type=Path,
@@ -57,7 +56,6 @@ def main() -> int:
             quick_service=args.quick,
             book_table=args.book,
         ),
-        additional_notes=args.notes,
     )
 
     print("Initializing RecommendationService...")

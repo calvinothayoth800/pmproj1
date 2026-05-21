@@ -55,7 +55,6 @@ def build_user_prompt(prefs: UserPreferences, candidates: list[dict[str, Any]], 
             "quick_service": prefs.extras.quick_service,
             "book_table": prefs.extras.book_table,
         },
-        "additional_notes": prefs.additional_notes,
     }
 
     return f"""User Preferences:

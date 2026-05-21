@@ -12,6 +12,15 @@ from src.phases.phase00.output_contract import RecommendationItem
 
 logger = logging.getLogger(__name__)
 
+
+def _to_bool(val: Any) -> bool:
+    """Convert string 'Yes'/'No' or bool-like values to Python bool."""
+    if isinstance(val, bool):
+        return val
+    if val is None or (isinstance(val, float) and pd.isna(val)):
+        return False
+    return str(val).strip().casefold() in {"yes", "y", "true", "1"}
+
 def parse_llm_json(response_text: str) -> dict[str, Any]:
     """
     Extract and parse the JSON response from the LLM.
@@ -95,6 +104,23 @@ def enrich_from_dataframe(recommendations: list[dict[str, Any]], candidates_df: 
             if pd.isna(cuisine_val):
                 cuisine_val = ""
 
+            location_val = row.get("location", "")
+            if pd.isna(location_val):
+                location_val = ""
+
+            dish_liked_val = row.get("dish_liked", "")
+            if pd.isna(dish_liked_val):
+                dish_liked_val = ""
+
+            book_table_val = _to_bool(row.get("book_table"))
+            online_order_val = _to_bool(row.get("online_order"))
+
+            votes_val = row.get("votes", 0)
+            if pd.isna(votes_val):
+                votes_val = 0
+            else:
+                votes_val = int(votes_val)
+
             items.append(
                 RecommendationItem(
                     rank=idx,
@@ -103,6 +129,11 @@ def enrich_from_dataframe(recommendations: list[dict[str, Any]], candidates_df: 
                     rating=rating_val,
                     estimated_cost=cost_val,
                     explanation=rec.get("explanation", ""),
+                    location=str(location_val),
+                    dish_liked=str(dish_liked_val),
+                    book_table=book_table_val,
+                    online_order=online_order_val,
+                    votes=votes_val,
                 )
             )
 

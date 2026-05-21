@@ -335,6 +335,6 @@ Update this table in [README.md](README.md) as you progress.
 | 00 – Web UI contract | Implemented (`src/phases/phase00`) |
 | 01 – Data foundation | Implemented (`src/phases/phase01`, facade `src/data`) |
 | 02 – Filtering engine | Implemented (`src/phases/phase02`, facade `src/filter`) |
-| 03 – LLM recommendation | Not started |
+| 03 – LLM recommendation | Implemented (`src/llm/`, `src/services/`, `src/phases/phase03`) |
 | 04 – User interface | Not started |
 | 05 – Hardening & deploy | Not started |

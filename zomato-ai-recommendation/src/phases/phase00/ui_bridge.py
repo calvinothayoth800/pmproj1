@@ -12,9 +12,8 @@ from pydantic import ValidationError
 
 from src.phases.phase00.preferences import BudgetTier, PreferenceExtras, UserPreferences
 
-# Limits aligned with docs/EDGE_CASES.md (avoid over-filtering; bound LLM notes).
+# Limits aligned with docs/EDGE_CASES.md (avoid over-filtering).
 MAX_UI_CUISINES: int = 10
-MAX_ADDITIONAL_NOTES_CHARS: int = 2000
 
 # Common UI spellings → dataset-facing token (extend in Phase 01 DATA_NOTES).
 _CITY_ALIASES: dict[str, str] = {
@@ -62,7 +61,7 @@ def preferences_from_ui(payload: dict[str, Any]) -> UserPreferences:
 
     Expected keys:
         city (str), budget (str), cuisines (list[str] | str), min_rating (float),
-        extras (dict, optional), additional_notes (str, optional)
+        extras (dict, optional)
 
     Raises:
         ValidationError: invalid or out-of-range fields
@@ -77,12 +76,6 @@ def preferences_from_ui(payload: dict[str, Any]) -> UserPreferences:
     except (TypeError, ValueError) as e:
         raise ValueError("min_rating must be a number") from e
 
-    notes = payload.get("additional_notes")
-    if notes is not None:
-        notes = str(notes).strip()
-        if len(notes) > MAX_ADDITIONAL_NOTES_CHARS:
-            notes = notes[:MAX_ADDITIONAL_NOTES_CHARS]
-
     extras = _coerce_extras(payload.get("extras"))
 
     prefs = UserPreferences(
@@ -91,7 +84,6 @@ def preferences_from_ui(payload: dict[str, Any]) -> UserPreferences:
         cuisines=payload.get("cuisines") or [],
         min_rating=min_rating,
         extras=extras,
-        additional_notes=notes or None,
     )
     if len(prefs.cuisines) > MAX_UI_CUISINES:
         return prefs.model_copy(update={"cuisines": prefs.cuisines[:MAX_UI_CUISINES]})

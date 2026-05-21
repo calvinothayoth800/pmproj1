@@ -104,11 +104,12 @@ def test_min_rating_excludes_null_rating_when_positive() -> None:
     assert "D" not in names
 
 
-def test_budget_accepts_unknown_tier_rows() -> None:
+def test_budget_excludes_unknown_tier_rows() -> None:
+    """Rows with unknown budget_tier must NOT appear when a budget is selected."""
     prefs = UserPreferences(city="Bangalore", budget="high", cuisines=[], min_rating=0.0)
     eng = FilterEngine(_sample_df())
     out = eng.apply(prefs, limit=10)
-    assert "D" in set(out.candidates["name"])
+    assert "D" not in set(out.candidates["name"])
 
 
 def test_book_table_extra() -> None:

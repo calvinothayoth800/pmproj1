@@ -8,6 +8,7 @@ from __future__ import annotations
 
 import logging
 from dataclasses import dataclass, field
+from typing import Any
 
 import pandas as pd
 
@@ -40,18 +41,17 @@ def _normalize_yes(val: Any) -> bool:
 
 def _mask_city(df: pd.DataFrame, prefs: UserPreferences) -> pd.Series:
     canon = apply_city_aliases(prefs.city).casefold()
-    city_match = df["city"].astype(str).str.strip().str.casefold() == canon
-    # Broaden with neighbourhood text (substring match — MVP).
-    loc = df["location"].fillna("").astype(str).str.casefold()
-    loc_match = loc.str.contains(canon, regex=False, na=False)
-    return city_match | loc_match
+    # Exact city match only — keeps the filter count consistent with the city
+    # dropdown counts (which are also city-exact via value_counts()).
+    return df["city"].astype(str).str.strip().str.casefold() == canon
 
 
 def _mask_budget(df: pd.DataFrame, prefs: UserPreferences) -> pd.Series:
     tier = df["budget_tier"].astype(str).str.casefold()
     wanted = prefs.budget.casefold()
-    # Include unknown tier so missing-cost rows are not silently excluded (see EDGE_CASES).
-    return (tier == wanted) | (tier == "unknown")
+    # Strict match only — restaurants with no cost data (unknown tier) are excluded
+    # so the live counter stays consistent with the city dropdown counts.
+    return tier == wanted
 
 
 def _mask_cuisine(df: pd.DataFrame, prefs: UserPreferences) -> pd.Series:
@@ -109,7 +109,7 @@ def explain_empty(funnel: dict[str, int], prefs: UserPreferences) -> list[str]:
         return msgs
     if funnel.get("after_city", 0) == 0:
         msgs.append(
-            f"No rows match city “{prefs.city}” (including location text). "
+            f"No rows match city '{prefs.city}'. "
             "Try another spelling or broader area."
         )
     if funnel.get("after_city", 0) > 0 and funnel.get("after_rating", 0) == 0:
@@ -119,13 +119,13 @@ def explain_empty(funnel: dict[str, int], prefs: UserPreferences) -> list[str]:
         )
     if funnel.get("after_rating", 0) > 0 and funnel.get("after_budget", 0) == 0:
         msgs.append(
-            f"No restaurants in the “{prefs.budget}” budget bucket (unknown-cost rows were allowed). "
+            f"No restaurants in the '{prefs.budget}' budget tier. "
             "Try a different budget tier."
         )
     if funnel.get("after_budget", 0) > 0 and funnel.get("after_cuisine", 0) == 0:
         msgs.append(
             "No cuisine overlap for the selected cuisines. "
-            "Remove one cuisine or pick a broader type (e.g. “Chinese” vs “Sichuan”)."
+            "Remove one cuisine or pick a broader type (e.g. 'Chinese' vs 'Sichuan')."
         )
     if funnel.get("after_cuisine", 0) > 0 and funnel.get("after_extras", 0) == 0:
         msgs.append(
