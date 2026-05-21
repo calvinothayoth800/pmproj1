@@ -12,7 +12,7 @@ _ROOT = Path(__file__).resolve().parents[2]
 if str(_ROOT) not in sys.path:
     sys.path.insert(0, str(_ROOT))
 
-from src.config import DATA_CACHE_PATH, PROJECT_ROOT, TOP_K_RECOMMENDATIONS
+from src.config import DATA_CACHE_PATH, LLM_API_KEY, LLM_PROVIDER, PROJECT_ROOT, TOP_K_RECOMMENDATIONS
 from src.phases.phase00.preferences import UserPreferences, PreferenceExtras
 from src.phases.phase00.ui_bridge import preferences_from_ui_safe
 from src.phases.phase01.cache import load_processed
@@ -103,6 +103,10 @@ st.set_page_config(
 
 st.title("🍽️ Zomato AI Restaurant Recommender")
 st.caption("Get personalized restaurant picks powered by AI — filtered from 12K+ Zomato listings.")
+if LLM_API_KEY:
+    st.info(f"LLM provider configured: {LLM_PROVIDER.upper()}. Recommendations will use the Groq API if available.")
+else:
+    st.warning("GROQ_API_KEY is not configured. The app will return structured fallback recommendations instead of AI-ranked results.")
 
 # ---------------------------------------------------------------------------
 # Load data
@@ -230,6 +234,11 @@ service = RecommendationService(df)
 
 with st.spinner("Finding the best restaurants for you..."):
     response = service.recommend(prefs, top_k=top_k)
+
+if response.llm_used:
+    st.success("AI-ranked recommendations generated using Groq.")
+else:
+    st.warning("Structured fallback recommendations are being shown. Check your GROQ_API_KEY or network if you expected Groq to be used.")
 
 # ---- Render results ----
 
