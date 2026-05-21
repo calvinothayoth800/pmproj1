@@ -36,23 +36,37 @@ def _load_dataframe() -> "pd.DataFrame":
     if not path.exists():
         build_script = PROJECT_ROOT / "scripts" / "build_cache.py"
         if build_script.is_file():
-            st.info("Data cache not found; building cache now. This may take a few minutes...")
-            try:
-                subprocess.run(
-                    [sys.executable, str(build_script)],
-                    check=True,
-                    cwd=str(PROJECT_ROOT),
-                )
-            except subprocess.CalledProcessError:
-                st.error(
-                    "Automatic cache build failed. Please ensure Python 3.10+ is installed "
-                    "and the deployment environment has network access, then restart the app."
-                )
-                st.stop()
+            st.info("No local cache was found. Building it now may take a few minutes.")
+            with st.spinner("Building restaurant cache..."):
+                try:
+                    subprocess.run(
+                        [sys.executable, str(build_script)],
+                        check=True,
+                        cwd=str(PROJECT_ROOT),
+                        capture_output=True,
+                        text=True,
+                    )
+                except subprocess.CalledProcessError as exc:
+                    st.error(
+                        "Automatic cache build failed. Please ensure Python 3.10+ is installed "
+                        "and the deployment environment has network access, then restart the app."
+                    )
+                    if exc.stdout:
+                        st.code(exc.stdout, language="text")
+                    if exc.stderr:
+                        st.code(exc.stderr, language="text")
+                    st.stop()
+        else:
+            st.error(
+                "Data cache not found and no build script is available. "
+                "Run `python scripts/build_cache.py` locally or restore the cache file."
+            )
+            st.stop()
+
         if not path.exists():
             st.error(
-                "Data cache not found after build attempt. Run `python scripts/build_cache.py` "
-                "locally or configure a startup build command for deployment."
+                "Data cache still missing after build. Run `python scripts/build_cache.py` locally "
+                "or check the file path in DATA_CACHE_PATH."
             )
             st.stop()
     return load_processed(path)
