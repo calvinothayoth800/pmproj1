@@ -17,7 +17,7 @@ from src.phases.phase00.ui_bridge import preferences_from_ui_safe
 from src.phases.phase01.cache import load_processed
 from src.phases.phase02.engine import FilterEngine
 from src.services.recommendation_service import RecommendationService
-from src.ui.formatters import item_card_markdown, response_summary_markdown
+from src.ui.formatters import item_card_markdown
 
 
 @st.cache_resource
@@ -238,44 +238,6 @@ st.markdown(
         margin-bottom: 0.35rem;
         color: #f8fafc;
     }
-    .summary-card {
-        align-items: center;
-        background: rgba(16, 22, 36, 0.82);
-        border: 1px solid var(--line);
-        border-radius: 14px;
-        display: flex;
-        gap: 1rem;
-        justify-content: space-between;
-        margin: 1rem 0 1.1rem;
-        padding: 1rem 1.1rem;
-    }
-    .summary-card p {
-        color: #dbe4f0;
-        margin: 0.2rem 0 0;
-    }
-    .summary-kicker {
-        color: var(--accent);
-        font-size: 0.74rem;
-        font-weight: 800;
-        letter-spacing: 0.08em;
-        text-transform: uppercase;
-    }
-    .summary-count {
-        border-left: 1px solid var(--line);
-        min-width: 110px;
-        padding-left: 1rem;
-        text-align: right;
-    }
-    .summary-count strong {
-        color: #f8fafc;
-        display: block;
-        font-size: 1.8rem;
-        line-height: 1;
-    }
-    .summary-count span,
-    .summary-note {
-        color: var(--text-soft);
-    }
     .result-card {
         align-items: flex-start;
         background:
@@ -384,17 +346,8 @@ st.markdown(
         padding-left: 0.85rem;
     }
     @media (max-width: 720px) {
-        .summary-card,
         .result-topline {
             display: block;
-        }
-        .summary-count {
-            border-left: 0;
-            border-top: 1px solid var(--line);
-            margin-top: 0.85rem;
-            padding-left: 0;
-            padding-top: 0.85rem;
-            text-align: left;
         }
         .result-card {
             grid-template-columns: 1fr;
@@ -550,8 +503,6 @@ if not response.items:
             st.info(msg)
     st.caption("Try relaxing your budget, lowering the minimum rating, or removing a cuisine filter.")
     st.stop()
-
-st.markdown(response_summary_markdown(response), unsafe_allow_html=True)
 
 for item in response.items:
     st.markdown(item_card_markdown(item), unsafe_allow_html=True)

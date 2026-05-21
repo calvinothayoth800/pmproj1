@@ -5,7 +5,7 @@ from __future__ import annotations
 from html import escape
 from typing import Optional
 
-from src.phases.phase00.output_contract import RecommendationItem, RecommendationResponse
+from src.phases.phase00.output_contract import RecommendationItem
 
 
 def format_cost(cost: Optional[int]) -> str:
@@ -103,29 +103,4 @@ def item_card_markdown(item: RecommendationItem) -> str:
         f"{explanation_html}"
         "</div>"
         "</article>"
-    )
-
-
-def response_summary_markdown(response: RecommendationResponse) -> str:
-    """Build an HTML summary block for the top of the results."""
-    summary = escape(response.summary or "Here are the restaurants that best match your preferences.")
-    count = response.filter_count if response.filter_count is not None else 0
-
-    notes = ""
-    if response.messages:
-        joined = " ".join(response.messages)
-        notes = f"<p class='summary-note'>{escape(joined)}</p>"
-
-    return (
-        '<section class="summary-card">'
-        "<div>"
-        '<span class="summary-kicker">Shortlist summary</span>'
-        f"<p>{summary}</p>"
-        "</div>"
-        '<div class="summary-count">'
-        f"<strong>{count}</strong>"
-        "<span>candidates</span>"
-        "</div>"
-        f"{notes}"
-        "</section>"
     )

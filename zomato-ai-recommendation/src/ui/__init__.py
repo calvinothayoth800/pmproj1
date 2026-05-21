@@ -7,7 +7,6 @@ from src.ui.formatters import (
     format_rating,
     format_votes,
     item_card_markdown,
-    response_summary_markdown,
 )
 
 __all__ = [
@@ -17,5 +16,4 @@ __all__ = [
     "format_rating",
     "format_votes",
     "item_card_markdown",
-    "response_summary_markdown",
 ]
