@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from pydantic import BaseModel, Field
+from typing import Optional
 
 
 class RecommendationItem(BaseModel):
@@ -11,8 +12,8 @@ class RecommendationItem(BaseModel):
     rank: int = Field(..., ge=1)
     name: str
     cuisine: str = ""
-    rating: float | None = None
-    estimated_cost: int | None = Field(default=None, description="INR cost for two, if known")
+    rating: Optional[float] = None
+    estimated_cost: Optional[int] = Field(default=None, description="INR cost for two, if known")
     explanation: str = ""
     location: str = Field(default="", description="Sub-locality / neighbourhood")
     dish_liked: str = Field(default="", description="Popular dishes (pipe-separated)")
@@ -29,8 +30,8 @@ class RecommendationResponse(BaseModel):
     """
 
     items: list[RecommendationItem] = Field(default_factory=list)
-    summary: str | None = None
-    filter_count: int | None = None
+    summary: Optional[str] = None
+    filter_count: Optional[int] = None
     llm_used: bool = False
     messages: list[str] = Field(
         default_factory=list,

@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from pydantic import BaseModel, Field
+from typing import Optional
 from src.phases.phase00.output_contract import RecommendationItem, RecommendationResponse
 
 
@@ -11,8 +12,8 @@ class RestaurantRecommendation(BaseModel):
 
     name: str = Field(..., description="Exact name of the restaurant matching the candidate list")
     cuisine: str = Field(default="", description="Cuisine type of the restaurant")
-    rating: float | None = Field(default=None, description="Average user rating")
-    estimated_cost: int | None = Field(default=None, description="INR cost for two")
+    rating: Optional[float] = Field(default=None, description="Average user rating")
+    estimated_cost: Optional[int] = Field(default=None, description="INR cost for two")
     explanation: str = Field(..., description="Personalized explanation of why this restaurant matches the user preferences")
 
 

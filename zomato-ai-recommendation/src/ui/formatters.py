@@ -5,14 +5,17 @@ from __future__ import annotations
 from src.phases.phase00.output_contract import RecommendationItem, RecommendationResponse
 
 
-def format_cost(cost: int | None) -> str:
+from typing import Optional
+
+
+def format_cost(cost: Optional[int]) -> str:
     """Format INR cost for two with currency symbol."""
     if cost is None:
         return "Price not listed"
     return f"₹{cost:,}"
 
 
-def format_rating(rating: float | None) -> str:
+def format_rating(rating: Optional[float]) -> str:
     """Format rating with star symbol."""
     if rating is None:
         return "Rating N/A"

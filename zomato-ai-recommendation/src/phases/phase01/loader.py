@@ -9,7 +9,7 @@ from __future__ import annotations
 
 import logging
 import time
-from typing import Any
+from typing import Any, Optional
 
 import pandas as pd
 
@@ -30,7 +30,7 @@ def _resolve_split(ds: Any) -> Any:
     raise ValueError("Unrecognized Hugging Face dataset structure (no splits).")
 
 
-def load_raw(max_rows: int | None = None) -> pd.DataFrame:
+def load_raw(max_rows: Optional[int] = None) -> pd.DataFrame:
     """
     Download (or load from cache) the dataset and return a pandas DataFrame.
 
@@ -42,7 +42,7 @@ def load_raw(max_rows: int | None = None) -> pd.DataFrame:
     """
     from datasets import load_dataset
 
-    last_err: BaseException | None = None
+    last_err: Optional[BaseException] = None
     for attempt in range(3):
         try:
             try:

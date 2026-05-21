@@ -10,7 +10,7 @@ import json
 import logging
 from datetime import datetime, timezone
 from pathlib import Path
-from typing import Any
+from typing import Any, Optional
 
 import pandas as pd
 
@@ -24,7 +24,7 @@ def _meta_path(parquet_path: Path) -> Path:
     return parquet_path.with_name(parquet_path.name + ".meta.json")
 
 
-def save_processed(df: pd.DataFrame, path: Path, *, extra_meta: dict[str, Any] | None = None) -> None:
+def save_processed(df: pd.DataFrame, path: Path, *, extra_meta: Optional[dict[str, Any]] = None) -> None:
     """Write Parquet plus ``.meta.json`` with version and row counts."""
     path = Path(path)
     path.parent.mkdir(parents=True, exist_ok=True)

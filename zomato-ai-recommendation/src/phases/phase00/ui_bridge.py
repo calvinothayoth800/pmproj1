@@ -6,7 +6,7 @@ Keeps normalization and caps in one place so Phase 04 forms stay thin.
 
 from __future__ import annotations
 
-from typing import Any
+from typing import Any, Optional
 
 from pydantic import ValidationError
 
@@ -90,7 +90,7 @@ def preferences_from_ui(payload: dict[str, Any]) -> UserPreferences:
     return prefs
 
 
-def preferences_from_ui_safe(payload: dict[str, Any]) -> tuple[UserPreferences | None, list[str]]:
+def preferences_from_ui_safe(payload: dict[str, Any]) -> tuple[Optional[UserPreferences], list[str]]:
     """
     Same as ``preferences_from_ui`` but returns validation errors as strings for UI display.
     """

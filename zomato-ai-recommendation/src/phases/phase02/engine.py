@@ -8,7 +8,7 @@ from __future__ import annotations
 
 import logging
 from dataclasses import dataclass, field
-from typing import Any
+from typing import Any, Optional
 
 import pandas as pd
 
@@ -147,7 +147,7 @@ class FilterEngine:
         self,
         prefs: UserPreferences,
         *,
-        limit: int | None = None,
+        limit: Optional[int] = None,
         log_steps: bool = True,
     ) -> FilterResult:
         cap = limit if limit is not None else MAX_CANDIDATES

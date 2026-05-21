@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import logging
 import time
-from typing import Any
+from typing import Any, Optional
 import httpx
 
 from src.config import LLM_API_KEY, LLM_BASE_URL, LLM_MODEL
@@ -13,7 +13,7 @@ logger = logging.getLogger(__name__)
 
 def complete(
     messages: list[dict[str, str]],
-    response_format: dict[str, str] | None = None,
+    response_format: Optional[dict[str, str]] = None,
     timeout_seconds: float = 30.0,
     max_retries: int = 3,
 ) -> str:
@@ -50,7 +50,7 @@ def complete(
     if response_format is not None:
         payload["response_format"] = response_format
 
-    last_err: Exception | None = None
+    last_err: Optional[Exception] = None
 
     for attempt in range(max_retries):
         try:

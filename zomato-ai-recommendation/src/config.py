@@ -4,6 +4,7 @@ from pathlib import Path
 
 from dotenv import load_dotenv
 import os
+from typing import Optional
 
 # Project root: zomato-ai-recommendation/
 _PROJECT_ROOT = Path(__file__).resolve().parent.parent
@@ -12,8 +13,23 @@ _ENV_PATH = _PROJECT_ROOT / ".env"
 load_dotenv(_ENV_PATH)
 
 
-def _env(key: str, default: str | None = None) -> str | None:
-    return os.getenv(key, default)
+def _env(key: str, default: Optional[str] = None) -> Optional[str]:
+    """Read from environment; fall back to Streamlit secrets if available."""
+    val = os.getenv(key, default)
+    if val is not None:
+        return val
+    # Try Streamlit secrets as fallback (for Streamlit Cloud / local .streamlit/secrets.toml)
+    try:
+        import streamlit as st
+        # Only access secrets if we're in a valid Streamlit context
+        if hasattr(st, 'secrets') and st.secrets is not None:
+            try:
+                return st.secrets.get(key, default)
+            except (KeyError, AttributeError, Exception):
+                pass
+    except ImportError:
+        pass
+    return default
 
 
 def _env_int(key: str, default: int) -> int:
@@ -24,11 +40,11 @@ def _env_int(key: str, default: int) -> int:
 
 
 LLM_PROVIDER: str = (_env("LLM_PROVIDER", "groq") or "groq").lower()
-GROQ_API_KEY: str | None = _env("GROQ_API_KEY")
-OPENAI_API_KEY: str | None = _env("OPENAI_API_KEY")
+GROQ_API_KEY: Optional[str] = _env("GROQ_API_KEY")
+OPENAI_API_KEY: Optional[str] = _env("OPENAI_API_KEY")
 
 # Groq uses GROQ_API_KEY; OpenAI uses OPENAI_API_KEY (OpenAI-compatible clients accept either)
-LLM_API_KEY: str | None = GROQ_API_KEY if LLM_PROVIDER == "groq" else OPENAI_API_KEY
+LLM_API_KEY: Optional[str] = GROQ_API_KEY if LLM_PROVIDER == "groq" else OPENAI_API_KEY
 if LLM_API_KEY is None:
     LLM_API_KEY = GROQ_API_KEY or OPENAI_API_KEY
 

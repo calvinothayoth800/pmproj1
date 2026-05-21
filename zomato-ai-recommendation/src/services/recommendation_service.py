@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import logging
-from typing import Any
+from typing import Any, Optional
 import pandas as pd
 
 from src.config import TOP_K_RECOMMENDATIONS
@@ -34,7 +34,7 @@ class RecommendationService:
         self.df = df
         self.filter_engine = FilterEngine(df)
 
-    def recommend(self, prefs: UserPreferences, top_k: int | None = None) -> RecommendationResponse:
+    def recommend(self, prefs: UserPreferences, top_k: Optional[int] = None) -> RecommendationResponse:
         """
         Produce personalized recommendations based on preferences.
         Runs candidates through FilterEngine, and then ranks & explains them via LLM.

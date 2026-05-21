@@ -8,7 +8,7 @@ from __future__ import annotations
 
 import logging
 import re
-from typing import Any
+from typing import Any, Optional
 
 import pandas as pd
 
@@ -24,7 +24,7 @@ COL_LISTED_TYPE = "listed_in(type)"
 _MIN_PER_CITY_FOR_QUANTILES = 30
 
 
-def parse_rate(val: Any) -> float | None:
+def parse_rate(val: Any) -> Optional[float]:
     """Parse dataset ``rate`` into 0–5 float; unusable tokens become None."""
     if val is None or pd.isna(val):
         return None
@@ -44,7 +44,7 @@ def parse_rate(val: Any) -> float | None:
     return x
 
 
-def parse_cost(val: Any) -> int | None:
+def parse_cost(val: Any) -> Optional[int]:
     """
     Parse ``approx_cost(for two people)`` into INR integer.
     Handles commas, currency noise, and simple ranges (uses midpoint).

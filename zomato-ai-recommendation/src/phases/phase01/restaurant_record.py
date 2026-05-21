@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from pydantic import BaseModel, Field
+from typing import Optional
 
 
 class RestaurantRecord(BaseModel):
@@ -13,10 +14,10 @@ class RestaurantRecord(BaseModel):
     city: str = ""
     location: str = ""
     cuisines: str = Field("", description="Pipe-separated normalized cuisine tokens")
-    rating: float | None = Field(None, ge=0.0, le=5.0)
+    rating: Optional[float] = Field(None, ge=0.0, le=5.0)
     votes: int = Field(0, ge=0)
-    cost_for_two: int | None = Field(None, ge=0, description="Approximate INR for two")
-    budget_tier: str | None = Field(None, description="low | medium | high | unknown")
+    cost_for_two: Optional[int] = Field(None, ge=0, description="Approximate INR for two")
+    budget_tier: Optional[str] = Field(None, description="low | medium | high | unknown")
     rest_type: str = ""
     online_order: str = ""
     book_table: str = ""

@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import pandas as pd
 import pytest
+from typing import Optional
 
 from src.phases.phase01.preprocessor import (
     COL_COST,
@@ -29,7 +30,7 @@ from src.phases.phase01.preprocessor import (
         ("-1", None),
     ],
 )
-def test_parse_rate(raw: object, expected: float | None) -> None:
+def test_parse_rate(raw: object, expected: Optional[float]) -> None:
     got = parse_rate(raw)
     if expected is None:
         assert got is None
@@ -49,7 +50,7 @@ def test_parse_rate(raw: object, expected: float | None) -> None:
         (None, None),
     ],
 )
-def test_parse_cost(raw: object, expected: int | None) -> None:
+def test_parse_cost(raw: object, expected: Optional[int]) -> None:
     assert parse_cost(raw) == expected
 
 
