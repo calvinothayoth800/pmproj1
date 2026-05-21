@@ -80,36 +80,35 @@ def item_card_markdown(item: RecommendationItem) -> str:
     if pills:
         availability_html = f"<div class='result-pills'>{''.join(pills)}</div>"
 
-    return f"""
-    <article class="result-card">
-        <div class="result-rank">{item.rank:02d}</div>
-        <div class="result-body">
-            <div class="result-topline">
-                <div>
-                    <h3>{escape(item.name)}</h3>
-                    <p class="result-location">{escape(item.location or "Location not listed")}</p>
-                </div>
-                <div class="result-score">
-                    <strong>{escape(format_rating(item.rating))}</strong>
-                    <span>rating</span>
-                </div>
-            </div>
-            <div class="result-meta">
-                <span>{escape(format_cost(item.estimated_cost))} for two</span>
-                <span>{escape(cuisine_text)}</span>
-            </div>
-            {dish_html}
-            {availability_html}
-            {explanation_html}
-        </div>
-    </article>
-    """
+    return (
+        '<article class="result-card">'
+        f'<div class="result-rank">{item.rank:02d}</div>'
+        '<div class="result-body">'
+        '<div class="result-topline">'
+        "<div>"
+        f"<h3>{escape(item.name)}</h3>"
+        f'<p class="result-location">{escape(item.location or "Location not listed")}</p>'
+        "</div>"
+        '<div class="result-score">'
+        f"<strong>{escape(format_rating(item.rating))}</strong>"
+        "<span>rating</span>"
+        "</div>"
+        "</div>"
+        '<div class="result-meta">'
+        f"<span>{escape(format_cost(item.estimated_cost))} for two</span>"
+        f"<span>{escape(cuisine_text)}</span>"
+        "</div>"
+        f"{dish_html}"
+        f"{availability_html}"
+        f"{explanation_html}"
+        "</div>"
+        "</article>"
+    )
 
 
 def response_summary_markdown(response: RecommendationResponse) -> str:
     """Build an HTML summary block for the top of the results."""
     summary = escape(response.summary or "Here are the restaurants that best match your preferences.")
-    ranker = "Groq AI ranking" if response.llm_used else "Local scoring"
     count = response.filter_count if response.filter_count is not None else 0
 
     notes = ""
@@ -117,16 +116,16 @@ def response_summary_markdown(response: RecommendationResponse) -> str:
         joined = " ".join(response.messages)
         notes = f"<p class='summary-note'>{escape(joined)}</p>"
 
-    return f"""
-    <section class="summary-card">
-        <div>
-            <span class="summary-kicker">{escape(ranker)}</span>
-            <p>{summary}</p>
-        </div>
-        <div class="summary-count">
-            <strong>{count}</strong>
-            <span>candidates</span>
-        </div>
-        {notes}
-    </section>
-    """
+    return (
+        '<section class="summary-card">'
+        "<div>"
+        '<span class="summary-kicker">Shortlist summary</span>'
+        f"<p>{summary}</p>"
+        "</div>"
+        '<div class="summary-count">'
+        f"<strong>{count}</strong>"
+        "<span>candidates</span>"
+        "</div>"
+        f"{notes}"
+        "</section>"
+    )

@@ -185,7 +185,8 @@ st.markdown(
     div[data-testid="stMultiSelect"] label,
     div[data-testid="stSlider"] label,
     div[data-testid="stRadio"] label,
-    div[data-testid="stCheckbox"] label {
+    div[data-testid="stCheckbox"] label,
+    div[data-testid="stToggle"] label {
         color: #dbe4f0 !important;
         font-weight: 650;
     }
@@ -207,6 +208,30 @@ st.markdown(
         background: linear-gradient(135deg, #ff6a3d, #ff3d5a);
         font-weight: 750;
         box-shadow: 0 16px 34px rgba(255, 90, 61, 0.22);
+    }
+    div[data-testid="stToggle"] {
+        background: rgba(7, 10, 18, 0.38);
+        border: 1px solid rgba(148, 163, 184, 0.14);
+        border-radius: 12px;
+        min-height: 72px;
+        padding: 0.72rem 0.78rem;
+    }
+    div[data-testid="stToggle"] label {
+        align-items: center;
+        display: flex;
+        gap: 0.45rem;
+        min-height: 38px;
+    }
+    div[data-testid="stToggle"] p {
+        font-size: 0.9rem;
+        line-height: 1.2;
+        margin: 0;
+    }
+    .extras-grid-title {
+        color: var(--text-soft);
+        font-size: 0.86rem;
+        font-weight: 700;
+        margin: 0.1rem 0 0.45rem;
     }
     .results-heading {
         margin-top: 2.1rem;
@@ -444,14 +469,14 @@ with st.container(border=True):
             help="Set to 0 to include unrated restaurants.",
         )
     with extras_col:
-        st.caption("Extras")
+        st.markdown("<p class='extras-grid-title'>Extras</p>", unsafe_allow_html=True)
         extra_col1, extra_col2, extra_col3 = st.columns(3)
         with extra_col1:
-            family_friendly = st.checkbox("Family", value=False)
+            family_friendly = st.toggle("Family friendly", value=False)
         with extra_col2:
-            quick_service = st.checkbox("Quick service", value=False)
+            quick_service = st.toggle("Quick service", value=False)
         with extra_col3:
-            book_table = st.checkbox("Table booking", value=False)
+            book_table = st.toggle("Table booking", value=False)
 
     filter_payload = {
         "city": city,
@@ -517,10 +542,6 @@ with st.spinner("Finding the best restaurants for you..."):
     response = service.recommend(prefs, top_k=top_k)
 
 st.markdown("<h2 class='results-heading'>Recommended restaurants</h2>", unsafe_allow_html=True)
-if response.llm_used:
-    st.caption("Ranked with Groq AI.")
-else:
-    st.caption("Ranked with the local scoring engine.")
 
 if not response.items:
     st.warning("No restaurants match your filters.")
